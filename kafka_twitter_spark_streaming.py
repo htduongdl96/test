@@ -425,7 +425,10 @@ def classificationWithSGD(predictData):
     clf = importModel("SGD")
     clf.predict(predictData)
 
-def trainNewData():
+def trainNewData(xTrain, testData ):
+    SGDClassifier.partial_fit(xTrain,testData)
+    exportModel(xTrain,"SGD")
+    return None
 
 
 if __name__ == "__main__":
