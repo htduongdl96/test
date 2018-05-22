@@ -157,7 +157,9 @@ def checkExistFile(filepath):
         f= open(filepath,"w+")
         f.close()
 
-def loadDataFromFile():
+import os.path
+from pathlib import Path
+def loadDataFromFile(trends):
     global timeStart
     global timeEnd
     global numberItem
@@ -176,70 +178,74 @@ def loadDataFromFile():
     global hashtag_diversity
     global language_diversity
     global vocabulary_diversity
-    checkExistFile("data.txt")
-    checkExistFile("user_diversity.txt")
-    checkExistFile("retweeted_user_diversity.txt")
-    checkExistFile("hashtag_diversity.txt")
-    checkExistFile("language_diversity.txt")
-    checkExistFile("vocabulary_diversity.txt")
-    f = open ("data.txt", "r")
-    print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx')
-    print(f.readlines()[0] + 'wtf')
-    f = open ("data.txt", "r")
-    numberItem = int(f.readlines()[0])
-    print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx')
-    print(numberItem)
-    f = open ("data.txt", "r")
-    ratio_retweets = float(f.readlines()[1])
-    f = open ("data.txt", "r")
-    hashtags = float(f.readlines()[2])
-    f = open ("data.txt", "r")
-    length = float(f.readlines()[3])
-    f = open ("data.txt", "r")
-    exclamations = float(f.readlines()[4])
-    f = open ("data.txt", "r")
-    questions = float(f.readlines()[5])
-    f = open ("data.txt", "r")
-    links = float(f.readlines()[6])
-    f = open ("data.txt", "r")
-    topicRepetition = float(f.readlines()[7])
-    f = open ("data.txt", "r")
-    replies = float(f.readlines()[8])
-    f = open ("data.txt", "r")
-    tempTime = f.readlines()[9].replace("\n","")
-    # print("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS")
-    # print(tempTime)
-    if(len(tempTime) > 23):
-        timeStart = datetime.strptime(tempTime,'%Y-%m-%d %H:%M:%S.%f')
-    else:
-        print("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS")
-        print(tempTime)
-        timeStart = datetime.strptime(tempTime,'%Y-%m-%d %H:%M:%S')
-    f = open ("data.txt", "r")
-    tempTime = f.readlines()[10].replace("\n","")
-    # print("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS")
-    # print(tempTime)
-    if(len(tempTime) > 23):
-        timeStart = datetime.strptime(tempTime,'%Y-%m-%d %H:%M:%S.%f')
-    else:
 
-        timeStart = datetime.strptime(tempTime,'%Y-%m-%d %H:%M:%S')
+    myFile = Path(trends + "/data.txt")
+    if(myFile.is_fife()):
+        f = open(trends + "/data.txt", "r")
+        print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx')
+        print(f.readlines()[0] + 'wtf')
+        f = open("data.txt", "r")
+        numberItem = int(f.readlines()[0])
+        print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx')
+        print(numberItem)
+        f = open(trends + "/data.txt", "r")
+        ratio_retweets = float(f.readlines()[1])
+        f = open(trends + "/data.txt", "r")
+        hashtags = float(f.readlines()[2])
+        f = open(trends + "/data.txt", "r")
+        length = float(f.readlines()[3])
+        f = open(trends + "/data.txt", "r")
+        exclamations = float(f.readlines()[4])
+        f = open(trends + "/data.txt", "r")
+        questions = float(f.readlines()[5])
+        f = open(trends + "/data.txt", "r")
+        links = float(f.readlines()[6])
+        f = open(trends + "/data.txt", "r")
+        topicRepetition = float(f.readlines()[7])
+        f = open(trends + "/data.txt", "r")
+        replies = float(f.readlines()[8])
+        f = open(trends + "/data.txt", "r")
+        tempTime = f.readlines()[9].replace("\n", "")
+        # print("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS")
+        # print(tempTime)
+        if (len(tempTime) > 23):
+            timeStart = datetime.strptime(tempTime, '%Y-%m-%d %H:%M:%S.%f')
+        else:
+            print("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS")
+            print(tempTime)
+            timeStart = datetime.strptime(tempTime, '%Y-%m-%d %H:%M:%S')
+        f = open(trends + "/data.txt", "r")
+        tempTime = f.readlines()[10].replace("\n", "")
+        # print("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS")
+        # print(tempTime)
+        if (len(tempTime) > 23):
+            timeStart = datetime.strptime(tempTime, '%Y-%m-%d %H:%M:%S.%f')
+        else:
 
-    f.close()
+            timeStart = datetime.strptime(tempTime, '%Y-%m-%d %H:%M:%S')
+
+        f.close()
+
     try:
-        user_diversity  = json.load(open("user_diversity.txt"))
-        retweeted_user_diversity  = json.load(open("retweeted_user_diversity.txt"))
-        hashtag_diversity  = json.load(open("hashtag_diversity.txt"))
-        language_diversity  = json.load(open("language_diversity.txt"))
-        vocabulary_diversity  = json.load(open("vocabulary_diversity.txt"))
+        user_diversity  = json.load(open(trends+ "/user_diversity.txt"))
+        retweeted_user_diversity  = json.load(open(trends+ "/retweeted_user_diversity.txt"))
+        hashtag_diversity  = json.load(open(trends+ "/hashtag_diversity.txt"))
+        language_diversity  = json.load(open(trends+ "/language_diversity.txt"))
+        vocabulary_diversity  = json.load(open(trends+ "/vocabulary_diversity.txt"))
     except:
         pass
 
 
 
 
-def saveDataToFile():
-    f = open('data.txt', 'w+')
+def saveDataToFile(trends):
+    checkExistFile(trends+ "/data.txt")
+    checkExistFile(trends+ "/user_diversity.txt")
+    checkExistFile(trends+ "/retweeted_user_diversity.txt")
+    checkExistFile(trends+ "/hashtag_diversity.txt")
+    checkExistFile(trends+ "/language_diversity.txt")
+    checkExistFile(trends+ "/vocabulary_diversity.txt")
+    f = open(trends+ "/data.txt", 'w+')
     f.truncate()
     f.write(str(numberItem))
     f.write("\n")
@@ -263,31 +269,51 @@ def saveDataToFile():
     f.write("\n")
     f.write(str(timeEnd))
     f.close()
-    f = open('user_diversity.txt', 'w+')
+    f = open(trends+ "/user_diversity.txt", 'w+')
     f.truncate()
     f.close()
-    f = open('retweeted_user_diversity.txt', 'w+')
+    f = open(trends+ "/retweeted_user_diversity.txt", 'w+')
     f.truncate()
     f.close()
-    f = open('language_diversity.txt', 'w+')
+    f = open(trends+ "/language_diversity.txt", 'w+')
     f.truncate()
     f.close()
-    f = open('vocabulary_diversity.txt', 'w+')
+    f = open(trends+ "/vocabulary_diversity.txt", 'w+')
     f.truncate()
     f.close()
-    f = open('hashtag_diversity.txt', 'w+')
+    f = open(trends+ "/hashtag_diversity.txt", 'w+')
     f.truncate()
     f.close()
-    json.dump(user_diversity, open("user_diversity.txt",'w'))
-    json.dump(retweeted_user_diversity, open("retweeted_user_diversity.txt",'w'))
-    json.dump(hashtag_diversity, open("hashtag_diversity.txt",'w'))
-    json.dump(language_diversity, open("language_diversity.txt",'w'))
-    json.dump(vocabulary_diversity, open("vocabulary_diversity.txt",'w'))
+    json.dump(user_diversity, open(trends+ "/user_diversity.txt",'w'))
+    json.dump(retweeted_user_diversity, open(trends+ "/retweeted_user_diversity.txt",'w'))
+    json.dump(hashtag_diversity, open(trends+ "/hashtag_diversity.txt",'w'))
+    json.dump(language_diversity, open(trends+ "/language_diversity.txt",'w'))
+    json.dump(vocabulary_diversity, open(trends+ "/vocabulary_diversity.txt",'w'))
 
 
 def getFeature(x):
+    trend = checkTrend("trends",x)
+    if trend == False :
+        return
     global numberItem
-    loadDataFromFile()
+    global timeEnd
+    global timeStart
+    global depth_retweets
+    global ratio_retweets
+    global hashtags
+    global length
+    global exclamations
+    global questions
+    global links
+    global topicRepetition
+    global replies
+    global spreadVelocity
+    global user_diversity
+    global retweeted_user_diversity
+    global hashtag_diversity
+    global language_diversity
+    global vocabulary_diversity
+    loadDataFromFile(trend)
     numberItem = numberItem + 1
 
     #print ('------------' + json.dumps(x, indent = 4) + '----------------')
@@ -309,23 +335,6 @@ def getFeature(x):
      # 2
     tweetJson = test
     ###print(json.dumps(test, indent = 4))
-    global timeEnd
-    global timeStart
-    global depth_retweets
-    global ratio_retweets
-    global hashtags
-    global length
-    global exclamations
-    global questions
-    global links
-    global topicRepetition
-    global replies
-    global spreadVelocity
-    global user_diversity
-    global retweeted_user_diversity
-    global hashtag_diversity
-    global language_diversity
-    global vocabulary_diversity
     ###print (tweetJson)
     topicName = 'Rich Eisen'.lower()
     #print('--------------------------------1-----' + str(tweetJson['retweet_count']))
@@ -404,7 +413,7 @@ def getFeature(x):
     language_diversity1= calShannon(language_diversity)
     vocabulary_diversity1= calShannon(vocabulary_diversity)
     ##print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-    saveDataToFile()
+    saveDataToFile(trend)
     return [str(depth_retweets),str(ratio_retweets),str(hashtags),
             str(length),str(exclamations),str(questions),
             str(links),str(topicRepetition),str(replies),
@@ -419,16 +428,14 @@ def exportModel(model,filename):
 def importModel(filename):
     return pickle.load(open(filename,'rb'))
 
-from sklearn.linear_model import SGDClassifier
-#predict data with SGD
-def classificationWithSGD(predictData):
-    clf = importModel("SGD")
-    clf.predict(predictData)
-
-def trainNewData(xTrain, testData ):
-    SGDClassifier.partial_fit(xTrain,testData)
-    exportModel(xTrain,"SGD")
-    return None
+#check that input belong to any trend:
+def checkTrend(filename, input):
+    f = open(filename,"r")
+    for i in f:
+        if i in input:
+            return i
+        else:
+            return False
 
 
 if __name__ == "__main__":

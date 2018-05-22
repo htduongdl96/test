@@ -51,7 +51,12 @@ twitter_stream = Stream(auth, KafkaPushListener())
 api = tweepy.API(auth)
 trends1 = api.trends_place(1)
 trends = set([trend['name'] for trend in trends1[0]['trends']])
-for e in trends:
-	print('trends: --------------    ' + e)
-	twitter_stream.filter(track=[e])
-	break
+file = open("trends.txt","w")
+for i in trends:
+	file.write(json.dumps(i).replace('"',''))
+	file.write("\n")
+twitter_stream.sample()
+# for e in trends:
+# 	print('trends: --------------    ' + e)
+# 	twitter_stream.filter(track=[e])z
+# 	break
