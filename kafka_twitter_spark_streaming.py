@@ -324,8 +324,8 @@ def getFeature(x):
         'userId':res['user']['id'],
         'tweet':res['text'],
         'retweet_count':res['retweet_count'],
-        'arr_hashtags':res['entities']['hashtags'],
-        'links':len(res['entities']['urls']),
+        'arr_hashtags':res['retweeted_status']['extended_tweet']['entities']['hashtags'],
+        'links':len(res['retweeted_status']['entities']['urls']),
         'isReplies':isReplies(res['in_reply_to_status_id']),
         'created':res['created_at'],
         'lang':res['lang']
