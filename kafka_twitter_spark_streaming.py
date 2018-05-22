@@ -336,16 +336,7 @@ def getFeature(x):
     tweetJson = test
     ###print(json.dumps(test, indent = 4))
     ###print (tweetJson)
-    topicName = 'Rich Eisen'.lower()
-    #print('--------------------------------1-----' + str(tweetJson['retweet_count']))
-    #print('--------------------------------2-----' + str(tweetJson['arr_hashtags']))
-    #print('--------------------------------3-----' + str(tweetJson['tweet']))
-    #print('--------------------------------4-----' + str(tweetJson['links']))
-    #print('--------------------------------5-----' + str(tweetJson['isReplies']))
-    #print('--------------------------------6-----' + str(tweetJson['userId']))
-    #print('--------------------------------7-----' + str(numberItem))
-    ##print(tweetJson)
-    ##print('--------------------------------1-----' + str(tweetJson['text']))
+
     if tweetJson['retweet_count']>0 :
         ##print('--------------------------------1-----' + str(depth_retweets))
         depth_retweets=depth_retweets+1
@@ -366,13 +357,12 @@ def getFeature(x):
         ##print('--------------------------------4-----' + str(questions))
     links+=tweetJson['links']
     ##print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"+ str(tweetJson['userId']))
-    topicRepetition += tweetJson['tweet'].lower().count(topicName)
+    topicRepetition += tweetJson['tweet'].lower().count(trend.lower().replace("#",""))
     if tweetJson['isReplies']>0:
         replies+=1
     increaseBag(tweetJson['userId'], user_diversity)
     if tweetJson['retweet_count']>0:
         increaseBag(tweetJson['userId'], retweeted_user_diversity)
-
     for hashtag in tweetJson['arr_hashtags']:
         increaseBag(hashtag['text'], hashtag_diversity)
     increaseBag(tweetJson['lang'], language_diversity)
@@ -436,6 +426,10 @@ def checkTrend(filename, input):
             return i
         else:
             return False
+
+from sklearn.svm import SVC
+def predictTrend():
+    classifier = SVC(kernel='linear')
 
 
 if __name__ == "__main__":
