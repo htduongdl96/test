@@ -9,6 +9,8 @@ import tweepy
 from tweepy import Stream
 from tweepy import OAuthHandler
 from tweepy.streaming import StreamListener
+from urllib3.exceptions import ProtocolError, IncompleteRead
+import time
 import time
 import argparse
 import string
@@ -25,6 +27,19 @@ auth.set_access_token(access_token, access_secret)
 
 api = tweepy.API(auth)
 
+isRunning = False
+
+def StartStream(trends):
+	while True:
+		try:
+			twitter_stream.filter(track=trends,stall_warnings=True, async=True)
+		except ProtocolError:
+			continue
+		except IncompleteRead:
+			continue
+		except:
+			continue
+
 #Twitter Stream Listener
 class KafkaPushListener(StreamListener):
 	def __init__(self):
@@ -35,13 +50,20 @@ class KafkaPushListener(StreamListener):
 		self.producer = self.client.topics[bytes("twitter", "ascii")].get_producer()
 
 	def on_data(self, data):
+		global isRunning
+		isRunning = True
 		#Producer produces data for consumer
 		#Data comes from Twitter
+		print(data)
 		self.producer.produce(bytes(data, "ascii"))
 		return True
 
 	def on_error(self, status):
+		global isRunning
+		isRunning = False
 		print(status)
+		time.sleep(60)
+		print("WTF")
 		return True
 
 #Twitter Stream Config
@@ -51,11 +73,19 @@ twitter_stream = Stream(auth, KafkaPushListener())
 api = tweepy.API(auth)
 trends1 = api.trends_place(1)
 trends = set([trend['name'] for trend in trends1[0]['trends']])
+print(trends)
 file = open("trends.txt","w")
+file.flush()
+file.close()
+file = open("trends.txt","a+")
 for i in trends:
-	file.write(json.dumps(i).replace('"',''))
+	string = json.dumps(i).replace('"','')
+	print(string)
+	file.write(string)
 	file.write("\n")
-twitter_stream.sample()
+file.close()
+StartStream(trends)
+
 # for e in trends:
 # 	print('trends: --------------    ' + e)
 # 	twitter_stream.filter(track=[e])z

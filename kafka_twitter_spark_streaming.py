@@ -23,6 +23,7 @@ from nltk.corpus import stopwords
 from nltk.tokenize import TweetTokenizer
 from googletrans import Translator
 from datetime import datetime
+
 from pyspark import sql
 import json
 import re
@@ -33,6 +34,7 @@ import pickle
 import csv
 import os
 from pyspark.sql.types import Row
+
 vector = {    'depth_retweets':0,
               'ratio_retweets':0,
               'hashtags':0,
@@ -53,7 +55,8 @@ data = {}
 data_tweet_geo = {}
 removal_list = ['\\','/',',','(',')','!',':','.']
 stop = stopwords.words('english')
-
+os.environ['PYSPARK_SUBMIT_ARGS'] = '--packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.2.0 pyspark-shell'
+os.environ["PYSPARK_PYTHON"]="/usr/bin/python3"
 translator = Translator()
 def getIntent(x):
     tknzr = TweetTokenizer(reduce_len=True)
@@ -159,6 +162,7 @@ def checkExistFile(filepath):
 
 import os.path
 from pathlib import Path
+
 def loadDataFromFile(trends):
     global timeStart
     global timeEnd
@@ -179,32 +183,32 @@ def loadDataFromFile(trends):
     global language_diversity
     global vocabulary_diversity
 
-    myFile = Path(trends + "/data.txt")
-    if(myFile.is_fife()):
-        f = open(trends + "/data.txt", "r")
+    myFile = Path("trends/" +trends.rstrip() + "/data.txt")
+    if(myFile.is_file()):
+        f = open("trends/" + trends.rstrip() + "/data.txt", "r")
         print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx')
         print(f.readlines()[0] + 'wtf')
-        f = open("data.txt", "r")
+        f = open("trends/" + trends.rstrip() +"/data.txt", "r")
         numberItem = int(f.readlines()[0])
         print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx')
         print(numberItem)
-        f = open(trends + "/data.txt", "r")
+        f = open("trends/" + trends.rstrip() + "/data.txt", "r")
         ratio_retweets = float(f.readlines()[1])
-        f = open(trends + "/data.txt", "r")
+        f = open("trends/" + trends.rstrip() + "/data.txt", "r")
         hashtags = float(f.readlines()[2])
-        f = open(trends + "/data.txt", "r")
+        f = open("trends/" + trends.rstrip() + "/data.txt", "r")
         length = float(f.readlines()[3])
-        f = open(trends + "/data.txt", "r")
+        f = open("trends/" + trends.rstrip() + "/data.txt", "r")
         exclamations = float(f.readlines()[4])
-        f = open(trends + "/data.txt", "r")
+        f = open("trends/" + trends.rstrip() + "/data.txt", "r")
         questions = float(f.readlines()[5])
-        f = open(trends + "/data.txt", "r")
+        f = open("trends/" + trends.rstrip() + "/data.txt", "r")
         links = float(f.readlines()[6])
-        f = open(trends + "/data.txt", "r")
+        f = open("trends/" + trends.rstrip() + "/data.txt", "r")
         topicRepetition = float(f.readlines()[7])
-        f = open(trends + "/data.txt", "r")
+        f = open("trends/" + trends.rstrip() + "/data.txt", "r")
         replies = float(f.readlines()[8])
-        f = open(trends + "/data.txt", "r")
+        f = open("trends/" + trends.rstrip() + "/data.txt", "r")
         tempTime = f.readlines()[9].replace("\n", "")
         # print("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS")
         # print(tempTime)
@@ -214,7 +218,7 @@ def loadDataFromFile(trends):
             print("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS")
             print(tempTime)
             timeStart = datetime.strptime(tempTime, '%Y-%m-%d %H:%M:%S')
-        f = open(trends + "/data.txt", "r")
+        f = open("trends/" + trends.rstrip() + "/data.txt", "r")
         tempTime = f.readlines()[10].replace("\n", "")
         # print("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS")
         # print(tempTime)
@@ -227,11 +231,11 @@ def loadDataFromFile(trends):
         f.close()
 
     try:
-        user_diversity  = json.load(open(trends+ "/user_diversity.txt"))
-        retweeted_user_diversity  = json.load(open(trends+ "/retweeted_user_diversity.txt"))
-        hashtag_diversity  = json.load(open(trends+ "/hashtag_diversity.txt"))
-        language_diversity  = json.load(open(trends+ "/language_diversity.txt"))
-        vocabulary_diversity  = json.load(open(trends+ "/vocabulary_diversity.txt"))
+        user_diversity  = json.load(open("trends/" + trends.rstrip()+ "/user_diversity.txt"))
+        retweeted_user_diversity  = json.load(open("trends/" + trends.rstrip()+ "/retweeted_user_diversity.txt"))
+        hashtag_diversity  = json.load(open("trends/" + trends.rstrip()+ "/hashtag_diversity.txt"))
+        language_diversity  = json.load(open("trends/" + trends.rstrip()+ "/language_diversity.txt"))
+        vocabulary_diversity  = json.load(open("trends/" + trends.rstrip()+ "/vocabulary_diversity.txt"))
     except:
         pass
 
@@ -239,13 +243,16 @@ def loadDataFromFile(trends):
 
 
 def saveDataToFile(trends):
-    checkExistFile(trends+ "/data.txt")
-    checkExistFile(trends+ "/user_diversity.txt")
-    checkExistFile(trends+ "/retweeted_user_diversity.txt")
-    checkExistFile(trends+ "/hashtag_diversity.txt")
-    checkExistFile(trends+ "/language_diversity.txt")
-    checkExistFile(trends+ "/vocabulary_diversity.txt")
-    f = open(trends+ "/data.txt", 'w+')
+    print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXSAVESAVESAVESAVESAVESAVESAVESAVESAVESAVESAVESAVESAVESAVESAVESAVESAVESAVE")
+    if not os.path.exists("trends/" + trends.rstrip()):
+        os.makedirs("trends/" + trends.rstrip())
+    checkExistFile("trends/" + trends.rstrip()+ "/data.txt")
+    checkExistFile("trends/" + trends.rstrip()+ "/user_diversity.txt")
+    checkExistFile("trends/" + trends.rstrip()+ "/retweeted_user_diversity.txt")
+    checkExistFile("trends/" + trends.rstrip()+ "/hashtag_diversity.txt")
+    checkExistFile("trends/" + trends.rstrip()+ "/language_diversity.txt")
+    checkExistFile("trends/" + trends.rstrip()+ "/vocabulary_diversity.txt")
+    f = open("trends/" + trends.rstrip()+ "/data.txt", 'w+')
     f.truncate()
     f.write(str(numberItem))
     f.write("\n")
@@ -269,32 +276,30 @@ def saveDataToFile(trends):
     f.write("\n")
     f.write(str(timeEnd))
     f.close()
-    f = open(trends+ "/user_diversity.txt", 'w+')
+    f = open("trends/" + trends.rstrip()+ "/user_diversity.txt", 'w+')
     f.truncate()
     f.close()
-    f = open(trends+ "/retweeted_user_diversity.txt", 'w+')
+    f = open("trends/" + trends.rstrip()+ "/retweeted_user_diversity.txt", 'w+')
     f.truncate()
     f.close()
-    f = open(trends+ "/language_diversity.txt", 'w+')
+    f = open("trends/" + trends.rstrip()+ "/language_diversity.txt", 'w+')
     f.truncate()
     f.close()
-    f = open(trends+ "/vocabulary_diversity.txt", 'w+')
+    f = open("trends/" + trends.rstrip()+ "/vocabulary_diversity.txt", 'w+')
     f.truncate()
     f.close()
-    f = open(trends+ "/hashtag_diversity.txt", 'w+')
+    f = open("trends/" + trends.rstrip()+ "/hashtag_diversity.txt", 'w+')
     f.truncate()
     f.close()
-    json.dump(user_diversity, open(trends+ "/user_diversity.txt",'w'))
-    json.dump(retweeted_user_diversity, open(trends+ "/retweeted_user_diversity.txt",'w'))
-    json.dump(hashtag_diversity, open(trends+ "/hashtag_diversity.txt",'w'))
-    json.dump(language_diversity, open(trends+ "/language_diversity.txt",'w'))
-    json.dump(vocabulary_diversity, open(trends+ "/vocabulary_diversity.txt",'w'))
+    json.dump(user_diversity, open("trends/" + trends.rstrip()+ "/user_diversity.txt",'w'))
+    json.dump(retweeted_user_diversity, open("trends/" + trends.rstrip()+ "/retweeted_user_diversity.txt",'w'))
+    json.dump(hashtag_diversity, open("trends/" + trends.rstrip()+ "/hashtag_diversity.txt",'w'))
+    json.dump(language_diversity, open("trends/" + trends.rstrip()+ "/language_diversity.txt",'w'))
+    json.dump(vocabulary_diversity, open("trends/" + trends.rstrip()+ "/vocabulary_diversity.txt",'w'))
 
 
 def getFeature(x):
-    trend = checkTrend("trends",x)
-    if trend == False :
-        return
+
     global numberItem
     global timeEnd
     global timeStart
@@ -313,23 +318,34 @@ def getFeature(x):
     global hashtag_diversity
     global language_diversity
     global vocabulary_diversity
-    loadDataFromFile(trend)
-    numberItem = numberItem + 1
+
+
 
     #print ('------------' + json.dumps(x, indent = 4) + '----------------')
     res = json.loads(json.dumps(x, indent = 4))
-    print('asddddddddddddddddddadsada',res['text'])
-    #print(res)
-    test = {
-        'userId':res['user']['id'],
-        'tweet':res['text'],
-        'retweet_count':res['retweet_count'],
-        'arr_hashtags':res['retweeted_status']['extended_tweet']['entities']['hashtags'],
-        'links':len(res['retweeted_status']['entities']['urls']),
-        'isReplies':isReplies(res['in_reply_to_status_id']),
-        'created':res['created_at'],
-        'lang':res['lang']
-    }
+    # print('asddddddddddddddddddadsada',res['text'])
+    # print(res)
+    try:
+        test = {    'userId':res['user']['id'],
+                    'tweet': translator.translate(res['text']).text,
+                    'retweet_count': res['retweet_count'],
+                    'arr_hashtags': res['entities']['hashtags'],
+                    'links': len(res['entities']['urls']),
+                    'isReplies': isReplies(res['in_reply_to_status_id']),
+                    'created': res['created_at'],
+                    'lang': res['lang']}
+    except:
+        return
+        pass
+    trend = checkTrend("trends.txt", test['tweet'])
+
+    if trend == "a":
+        return
+    print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx" + trend)
+    loadDataFromFile(trend)
+    numberItem = numberItem + 1
+
+
     ###print('------------' + json.dumps(test, indent = 4) + '------------')
     #Return feature
      # 2
@@ -419,13 +435,17 @@ def importModel(filename):
     return pickle.load(open(filename,'rb'))
 
 #check that input belong to any trend:
+
 def checkTrend(filename, input):
     f = open(filename,"r")
+    # print(input)
+    print("AAAAAA")
     for i in f:
-        if i in input:
+        if i.replace("#","").rstrip() in input:
+            print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" + i)
             return i
-        else:
-            return False
+            break
+    return "a"
 
 from sklearn.svm import SVC
 def predictTrend():
