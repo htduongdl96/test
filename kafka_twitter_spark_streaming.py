@@ -23,8 +23,9 @@ from nltk.corpus import stopwords
 from nltk.tokenize import TweetTokenizer
 from googletrans import Translator
 from datetime import datetime
-
 from pyspark import sql
+
+import MySQLdb
 import json
 import re
 import nltk
