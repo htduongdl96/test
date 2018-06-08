@@ -59,6 +59,61 @@ stop = stopwords.words('english')
 os.environ['PYSPARK_SUBMIT_ARGS'] = '--packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.2.0 pyspark-shell'
 os.environ["PYSPARK_PYTHON"]="/usr/bin/python3"
 translator = Translator()
+
+
+# Open database connection
+db = MySQLdb.connect("localhost","htduongdl96","1234","DB tweet" )
+# prepare a cursor object using cursor() method
+cursor = db.cursor()
+
+sql = """CREATE TABLE ALL_TWEET_VECTOR (
+         ID  INT NOT NULL,
+         TREND  CHAR(20),
+        DEPTH_RETWEETS FLOAT ,
+        RATIO_RETWEETS FLOAT ,
+        HASHTAGS FLOAT ,
+        LENGTH FLOAT ,
+        EXCLAMATIONS  FLOAT ,
+        QUESTIONS FLOAT ,
+        LINKS FLOAT ,
+        TOPICREPETITION FLOAT ,
+        REPLIES  FLOAT ,
+        SPREADVELOCITY  FLOAT ,
+        USER_DIVERSITY FLOAT ,
+        RETWEETED_USER_DIVERSITY FLOAT ,
+        HASHTAG_DIVERSITY FLOAT ,
+        LANGUAGE_DIVERSITY FLOAT ,
+        VOCABULARY_DIVERSITY FLOAT ,
+        CLASS INT
+         )"""
+cursor.execute(sql)
+sql = """CREATE TABLE TWEET_VECTOR_TRAIN (
+        ID INT NOT NULL,
+         TREND  CHAR(20),
+        DEPTH_RETWEETS FLOAT ,
+        RATIO_RETWEETS FLOAT ,
+        HASHTAGS FLOAT ,
+        LENGTH FLOAT ,
+        EXCLAMATIONS  FLOAT ,
+        QUESTIONS FLOAT ,
+        LINKS FLOAT ,
+        TOPICREPETITION FLOAT ,
+        REPLIES  FLOAT ,
+        SPREADVELOCITY  FLOAT ,
+        USER_DIVERSITY FLOAT ,
+        RETWEETED_USER_DIVERSITY FLOAT ,
+        HASHTAG_DIVERSITY FLOAT ,
+        LANGUAGE_DIVERSITY FLOAT ,
+        VOCABULARY_DIVERSITY FLOAT ,
+        CLASS INT
+         )"""
+cursor.execute(sql)
+sql = """CREATE TABLE DETAIL_TWEET (
+         ID INT NOT NULL,
+         ID_TWEET INT)"""
+cursor.execute(sql)
+
+
 def getIntent(x):
     tknzr = TweetTokenizer(reduce_len=True)
     a = tknzr.tokenize(x)
@@ -403,6 +458,7 @@ def getFeature(x):
 
     ##print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" + stringTime)
     spreadVelocity = timeEnd - timeStart
+
     depth_retweets= depth_retweets/numberItem
     ratio_retweets= ratio_retweets/numberItem
     hashtags= hashtags/numberItem
@@ -419,6 +475,31 @@ def getFeature(x):
     hashtag_diversity1= calShannon(hashtag_diversity)
     language_diversity1= calShannon(language_diversity)
     vocabulary_diversity1= calShannon(vocabulary_diversity)
+
+    sql = """INSERT INTO ALL_TWEET_VECTOR(
+        ID, TREND, DEPTH_RETWEETS,RATIO_RETWEETS,HASHTAGS,
+        LENGTH, EXCLAMATIONS, QUESTIONS,LINKS  ,TOPICREPETITION  ,REPLIES   ,
+        SPREADVELOCITY   ,USER_DIVERSITY  ,RETWEETED_USER_DIVERSITY  ,HASHTAG_DIVERSITY ,
+        LANGUAGE_DIVERSITY  ,VOCABULARY_DIVERSITY  ,CLASS)"
+        
+        VALUES ('%d', '%s', %f, %f, %f,
+        %f, %f, %f,%f, %f, %f,%f, %f, %f,
+        %f, %f, %f, %f, %f, %f, %d)"""
+
+    sql = "INSERT INTO ALL_TWEET_VECTOR(\
+           ID, TREND, DEPTH_RETWEETS,RATIO_RETWEETS,HASHTAGS,) \
+            LENGTH, EXCLAMATIONS, QUESTIONS,LINKS  ,TOPICREPETITION  ,REPLIES   ,\
+            SPREADVELOCITY   ,USER_DIVERSITY  ,RETWEETED_USER_DIVERSITY  ,HASHTAG_DIVERSITY ,\
+            LANGUAGE_DIVERSITY, VOCABULARY_DIVERSITY, CLASS)\
+           VALUES ((SELECT ISNULL(MAX(ID) + 1, 1) FROM Anlagenteil), '%s', %f, %f, %f,\
+            %f, %f, %f,%f, %f, %f,%f, %f, %f,\
+            %f, %f, %f, %f, %f, %f, %d)" % \
+          (trend,depth_retweets,ratio_retweets,hashtags,
+            length,exclamations,questions,
+            links,topicRepetition,replies,
+            spreadVelocity,user_diversity1,
+            retweeted_user_diversity1,hashtag_diversity1,
+            language_diversity1,,0)
     ##print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
     saveDataToFile(trend)
     return [str(depth_retweets),str(ratio_retweets),str(hashtags),
