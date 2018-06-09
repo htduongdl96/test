@@ -61,59 +61,6 @@ os.environ["PYSPARK_PYTHON"]="/usr/bin/python3"
 translator = Translator()
 
 
-# Open database connection
-db = MySQLdb.connect("localhost","htduongdl96","1234","DB tweet" )
-# prepare a cursor object using cursor() method
-cursor = db.cursor()
-
-sql = """CREATE TABLE ALL_TWEET_VECTOR (
-         ID  INT NOT NULL,
-         TREND  CHAR(20),
-        DEPTH_RETWEETS FLOAT ,
-        RATIO_RETWEETS FLOAT ,
-        HASHTAGS FLOAT ,
-        LENGTH FLOAT ,
-        EXCLAMATIONS  FLOAT ,
-        QUESTIONS FLOAT ,
-        LINKS FLOAT ,
-        TOPICREPETITION FLOAT ,
-        REPLIES  FLOAT ,
-        SPREADVELOCITY  FLOAT ,
-        USER_DIVERSITY FLOAT ,
-        RETWEETED_USER_DIVERSITY FLOAT ,
-        HASHTAG_DIVERSITY FLOAT ,
-        LANGUAGE_DIVERSITY FLOAT ,
-        VOCABULARY_DIVERSITY FLOAT ,
-        CLASS INT
-         )"""
-cursor.execute(sql)
-sql = """CREATE TABLE TWEET_VECTOR_TRAIN (
-        ID INT NOT NULL,
-         TREND  CHAR(20),
-        DEPTH_RETWEETS FLOAT ,
-        RATIO_RETWEETS FLOAT ,
-        HASHTAGS FLOAT ,
-        LENGTH FLOAT ,
-        EXCLAMATIONS  FLOAT ,
-        QUESTIONS FLOAT ,
-        LINKS FLOAT ,
-        TOPICREPETITION FLOAT ,
-        REPLIES  FLOAT ,
-        SPREADVELOCITY  FLOAT ,
-        USER_DIVERSITY FLOAT ,
-        RETWEETED_USER_DIVERSITY FLOAT ,
-        HASHTAG_DIVERSITY FLOAT ,
-        LANGUAGE_DIVERSITY FLOAT ,
-        VOCABULARY_DIVERSITY FLOAT ,
-        CLASS INT
-         )"""
-cursor.execute(sql)
-sql = """CREATE TABLE DETAIL_TWEET (
-         ID INT NOT NULL,
-         ID_TWEET INT)"""
-cursor.execute(sql)
-
-
 def getIntent(x):
     tknzr = TweetTokenizer(reduce_len=True)
     a = tknzr.tokenize(x)
@@ -242,12 +189,12 @@ def loadDataFromFile(trends):
     myFile = Path("trends/" +trends.rstrip() + "/data.txt")
     if(myFile.is_file()):
         f = open("trends/" + trends.rstrip() + "/data.txt", "r")
-        print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx')
-        print(f.readlines()[0] + 'wtf')
+        #print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx')
+        #print(f.readlines()[0] + 'wtf')
         f = open("trends/" + trends.rstrip() +"/data.txt", "r")
         numberItem = int(f.readlines()[0])
-        print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx')
-        print(numberItem)
+        #print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx')
+        #print(numberItem)
         f = open("trends/" + trends.rstrip() + "/data.txt", "r")
         ratio_retweets = float(f.readlines()[1])
         f = open("trends/" + trends.rstrip() + "/data.txt", "r")
@@ -266,18 +213,18 @@ def loadDataFromFile(trends):
         replies = float(f.readlines()[8])
         f = open("trends/" + trends.rstrip() + "/data.txt", "r")
         tempTime = f.readlines()[9].replace("\n", "")
-        # print("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS")
-        # print(tempTime)
+        # #print("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS")
+        # #print(tempTime)
         if (len(tempTime) > 23):
             timeStart = datetime.strptime(tempTime, '%Y-%m-%d %H:%M:%S.%f')
         else:
-            print("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS")
-            print(tempTime)
+            #print("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS")
+            #print(tempTime)
             timeStart = datetime.strptime(tempTime, '%Y-%m-%d %H:%M:%S')
         f = open("trends/" + trends.rstrip() + "/data.txt", "r")
         tempTime = f.readlines()[10].replace("\n", "")
-        # print("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS")
-        # print(tempTime)
+        # #print("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS")
+        # #print(tempTime)
         if (len(tempTime) > 23):
             timeStart = datetime.strptime(tempTime, '%Y-%m-%d %H:%M:%S.%f')
         else:
@@ -299,7 +246,7 @@ def loadDataFromFile(trends):
 
 
 def saveDataToFile(trends):
-    print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXSAVESAVESAVESAVESAVESAVESAVESAVESAVESAVESAVESAVESAVESAVESAVESAVESAVESAVE")
+    #print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXSAVESAVESAVESAVESAVESAVESAVESAVESAVESAVESAVESAVESAVESAVESAVESAVESAVESAVE")
     if not os.path.exists("trends/" + trends.rstrip()):
         os.makedirs("trends/" + trends.rstrip())
     checkExistFile("trends/" + trends.rstrip()+ "/data.txt")
@@ -375,12 +322,69 @@ def getFeature(x):
     global language_diversity
     global vocabulary_diversity
 
+    # Open database connection
+    db = MySQLdb.connect("localhost", "htduongdl96", "motorola", "DBtweet")
+    # prepare a cursor object using cursor() method
+    cursor = db.cursor()
+    try:
+        sql = "use DBtweet"
+        cursor.execute(sql)
+        sql = """CREATE TABLE ALL_TWEET_VECTOR (
+                 ID  INT NOT NULL AUTO_INCREMENT,
+                 TREND  CHAR(200),
+                DEPTH_RETWEETS FLOAT ,
+                RATIO_RETWEETS FLOAT ,
+                HASHTAGS FLOAT ,
+                LENGTH FLOAT ,
+                EXCLAMATIONS  FLOAT ,
+                QUESTIONS FLOAT ,
+                LINKS FLOAT ,
+                TOPICREPETITION FLOAT ,
+                REPLIES  FLOAT ,
+                SPREADVELOCITY  FLOAT ,
+                USER_DIVERSITY FLOAT ,
+                RETWEETED_USER_DIVERSITY FLOAT ,
+                HASHTAG_DIVERSITY FLOAT ,
+                LANGUAGE_DIVERSITY FLOAT ,
+                VOCABULARY_DIVERSITY FLOAT ,
+                CLASS INT,
+                PRIMARY KEY (ID)
+                 )"""
+        cursor.execute(sql)
+        sql = """CREATE TABLE TWEET_VECTOR_TRAIN (
+                ID INT NOT NULL AUTO_INCREMENT,
+                 TREND  CHAR(200),
+                DEPTH_RETWEETS FLOAT ,
+                RATIO_RETWEETS FLOAT ,
+                HASHTAGS FLOAT ,
+                LENGTH FLOAT ,
+                EXCLAMATIONS  FLOAT ,
+                QUESTIONS FLOAT ,
+                LINKS FLOAT ,
+                TOPICREPETITION FLOAT ,
+                REPLIES  FLOAT ,
+                SPREADVELOCITY  FLOAT ,
+                USER_DIVERSITY FLOAT ,
+                RETWEETED_USER_DIVERSITY FLOAT ,
+                HASHTAG_DIVERSITY FLOAT ,
+                LANGUAGE_DIVERSITY FLOAT ,
+                VOCABULARY_DIVERSITY FLOAT ,
+                CLASS INT,
+                PRIMARY KEY (ID)
+                 )"""
+        cursor.execute(sql)
+        sql = """CREATE TABLE DETAIL_TWEET (
+                 ID INT NOT NULL,
+                 ID_TWEET INT)"""
+        cursor.execute(sql)
+    except:
+        pass
 
 
     #print ('------------' + json.dumps(x, indent = 4) + '----------------')
     res = json.loads(json.dumps(x, indent = 4))
-    # print('asddddddddddddddddddadsada',res['text'])
-    # print(res)
+    # #print('asddddddddddddddddddadsada',res['text'])
+    # #print(res)
     try:
         test = {    'userId':res['user']['id'],
                     'tweet': translator.translate(res['text']).text,
@@ -397,7 +401,7 @@ def getFeature(x):
 
     if trend == "a":
         return
-    print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx" + trend)
+    #print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx" + trend)
     loadDataFromFile(trend)
     numberItem = numberItem + 1
 
@@ -444,8 +448,8 @@ def getFeature(x):
             increaseBag(word, vocabulary_diversity)
     time = tweetJson['created']
     #Sun Apr 29 11:03:32 +0000 2018
-    print("####################################################################")
-    print(time)
+    #print("####################################################################")
+    #print(time)
     ##print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
     ##print(time)
     stringTime = time[4:7]+' '+time[8:10]+' '+time[-4:]+' '+time[11:13]+':'+time[14:16]+':'+time[17:19]
@@ -485,22 +489,44 @@ def getFeature(x):
         VALUES ('%d', '%s', %f, %f, %f,
         %f, %f, %f,%f, %f, %f,%f, %f, %f,
         %f, %f, %f, %f, %f, %f, %d)"""
-
-    sql = "INSERT INTO ALL_TWEET_VECTOR(\
-           ID, TREND, DEPTH_RETWEETS,RATIO_RETWEETS,HASHTAGS,) \
-            LENGTH, EXCLAMATIONS, QUESTIONS,LINKS  ,TOPICREPETITION  ,REPLIES   ,\
-            SPREADVELOCITY   ,USER_DIVERSITY  ,RETWEETED_USER_DIVERSITY  ,HASHTAG_DIVERSITY ,\
-            LANGUAGE_DIVERSITY, VOCABULARY_DIVERSITY, CLASS)\
-           VALUES ((SELECT ISNULL(MAX(ID) + 1, 1) FROM Anlagenteil), '%s', %f, %f, %f,\
-            %f, %f, %f,%f, %f, %f,%f, %f, %f,\
-            %f, %f, %f, %f, %f, %f, %d)" % \
-          (trend,depth_retweets,ratio_retweets,hashtags,
-            length,exclamations,questions,
-            links,topicRepetition,replies,
-            spreadVelocity,user_diversity1,
-            retweeted_user_diversity1,hashtag_diversity1,
-            language_diversity1,,0)
+    #print ("OMGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG" + str(cursor.lastrowid))
+    # sql = "INSERT INTO ALL_TWEET_VECTOR(\
+    #        TREND, DEPTH_RETWEETS,RATIO_RETWEETS,HASHTAGS, \
+    #         LENGTH, EXCLAMATIONS, QUESTIONS,LINKS  ,TOPICREPETITION  ,REPLIES   ,\
+    #         SPREADVELOCITY   ,USER_DIVERSITY  ,RETWEETED_USER_DIVERSITY  ,HASHTAG_DIVERSITY ,\
+    #         LANGUAGE_DIVERSITY, VOCABULARY_DIVERSITY, CLASS)\
+    #        VALUES ('%s', %f, %f, %f,\
+    #         %f, %f, %f,%f, %f, %f," \
+    #       "%f, %f, %f, %f, \
+    #        %f, %f, %d)" % \
+    #       (trend,depth_retweets,ratio_retweets,hashtags,
+    #         length,exclamations,questions,
+    #         links,topicRepetition,replies,
+    #         spreadVelocity,user_diversity1,
+    #         retweeted_user_diversity1,hashtag_diversity1,
+    #         language_diversity1,vocabulary_diversity1,0)
+    # cursor.execute(sql)
+    # db.commit()
     ##print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+    vector = []
+
+    vector.append(depth_retweets)
+    vector.append(ratio_retweets)
+    vector.append(hashtags)
+    vector.append(length)
+    vector.append(exclamations)
+    vector.append(questions)
+    vector.append(links)
+    vector.append(topicRepetition)
+    vector.append(replies)
+    vector.append(spreadVelocity)
+    vector.append(user_diversity1)
+    vector.append(retweeted_user_diversity1)
+    vector.append(hashtag_diversity1)
+    vector.append(language_diversity1)
+    vector.append(vocabulary_diversity1)
+    predictTrend(vector)
+
     saveDataToFile(trend)
     return [str(depth_retweets),str(ratio_retweets),str(hashtags),
             str(length),str(exclamations),str(questions),
@@ -514,24 +540,37 @@ def exportModel(model,filename):
     pickle.dump(model,open(filename,'wb'))
 
 def importModel(filename):
-    return pickle.load(open(filename,'rb'))
+    with open(filename, 'rb') as fin:
+        classifier = pickle.load(fin)
+        return classifier
 
 #check that input belong to any trend:
 
 def checkTrend(filename, input):
     f = open(filename,"r")
-    # print(input)
-    print("AAAAAA")
+    # #print(input)
+    #print("AAAAAA")
     for i in f:
         if i.replace("#","").rstrip() in input:
-            print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" + i)
+            # #print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" + i)
             return i
             break
     return "a"
 
 from sklearn.svm import SVC
-def predictTrend():
-    classifier = SVC(kernel='linear')
+from sklearn.preprocessing import StandardScaler
+def predictTrend(vector):
+    classifier = importModel("model.pkl")
+    # sc = StandardScaler()
+    # vector = sc.transform(vector)
+    print("DMJMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM" + str(vector))
+
+    test = [vector[0], vector[1], vector[2], vector[3],vector[4], vector[5], vector[6], vector[7], vector[8]
+        , vector[9], vector[10], vector[11], vector[12], vector[13], vector[14]]
+    class_probabilities = classifier.predict_proba([test])
+    print("CHO PHUOC XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"+str(class_probabilities))
+    classifier.predict(vector)
+
 
 
 if __name__ == "__main__":
@@ -539,9 +578,9 @@ if __name__ == "__main__":
 	#Create Spark Context to Connect Spark Cluster
     sc = SparkContext(appName="PythonStreamingKafkaTweetCount")
 
-	#Set the Batch Interval is 10 sec of Streaming Context
-    ssc = StreamingContext(sc, 10)
-    sqlContext = sql.SQLContext(sc)
+	#Set the Batch Interval is 2 sec of Streaming Context
+    ssc = StreamingContext(sc, 2)
+    # sqlContext = sql.SQLContext(sc)
 	#Create Kafka Stream to Consume Data Comes From Twitter Topic
 	#localhost:2181 = Default Zookeeper Consumer Address
     kafkaStream = KafkaUtils.createStream(ssc, 'localhost:2181', 'spark-streaming', {'twitter':1})
