@@ -301,6 +301,39 @@ def saveDataToFile(trends):
     json.dump(vocabulary_diversity, open("trends/" + trends.rstrip()+ "/vocabulary_diversity.txt",'w'))
 
 
+# Open database connection
+db = MySQLdb.connect("localhost", "htduongdl96", "motorola", "DBtweet")
+    # prepare a cursor object using cursor() method
+cursor = db.cursor()
+
+def getIDFromDB(trend):
+    global cursor
+    sql = "SELECT MAX(ID) FROM ALL_TWEET_VECTOR WHERE TREND = '%s'" % (trend)
+    cursor.execute(sql)
+    row = cursor.fetchone()
+    if (getTimeFromDB(row) < 5 * 60):
+        return row
+    sql = "SELECT MAX(ID) FROM ALL_TWEET_VECTOR"
+    cursor.execute(sql)
+    row = cursor.fetchone()
+    return row + 1
+
+from datetime import datetime, date
+def getTimeFromDB(ID):
+    global cursor
+    sql = "SELECT TIME FROM ALL_TWEET_VECTOR WHERE ID = '%s'" % (ID)
+    cursor.execute(sql)
+    time = cursor.fetchone()
+    stringTime = time[4:7] + ' ' + time[8:10] + ' ' + time[-4:] + ' ' + time[11:13] + ':' + time[14:16] + ':' + time[17:19]
+    ##print(stringTime)
+    datetime_object = datetime.strptime(stringTime, '%b %d %Y %H:%M:%S')
+    now = datetime.datetime.now()
+    timeCpr = datetime.combine(date.today(), datetime_object) - datetime.combine(date.today(), now)
+    if(timeCpr < 5 * 60):
+        return True
+    else:
+        return False
+
 def getFeature(x):
 
     global numberItem
@@ -321,17 +354,15 @@ def getFeature(x):
     global hashtag_diversity
     global language_diversity
     global vocabulary_diversity
-
-    # Open database connection
-    db = MySQLdb.connect("localhost", "htduongdl96", "motorola", "DBtweet")
-    # prepare a cursor object using cursor() method
-    cursor = db.cursor()
+    global db
+    global cursor
     try:
         sql = "use DBtweet"
         cursor.execute(sql)
         sql = """CREATE TABLE ALL_TWEET_VECTOR (
                  ID  INT NOT NULL AUTO_INCREMENT,
                  TREND  CHAR(200),
+                 TIME VARCHAR(30),
                 DEPTH_RETWEETS FLOAT ,
                 RATIO_RETWEETS FLOAT ,
                 HASHTAGS FLOAT ,
@@ -354,6 +385,7 @@ def getFeature(x):
         sql = """CREATE TABLE TWEET_VECTOR_TRAIN (
                 ID INT NOT NULL AUTO_INCREMENT,
                  TREND  CHAR(200),
+                TIME VARCHAR(30),
                 DEPTH_RETWEETS FLOAT ,
                 RATIO_RETWEETS FLOAT ,
                 HASHTAGS FLOAT ,
@@ -401,10 +433,12 @@ def getFeature(x):
 
     if trend == "a":
         return
-    #print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx" + trend)
-    loadDataFromFile(trend)
-    numberItem = numberItem + 1
 
+
+    ID = getIDFromDB(trend)
+    #print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx" + trend)
+    loadDataFromFile(ID)
+    numberItem = numberItem + 1
 
     ###print('------------' + json.dumps(test, indent = 4) + '------------')
     #Return feature
@@ -490,23 +524,7 @@ def getFeature(x):
         %f, %f, %f,%f, %f, %f,%f, %f, %f,
         %f, %f, %f, %f, %f, %f, %d)"""
     #print ("OMGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG" + str(cursor.lastrowid))
-    # sql = "INSERT INTO ALL_TWEET_VECTOR(\
-    #        TREND, DEPTH_RETWEETS,RATIO_RETWEETS,HASHTAGS, \
-    #         LENGTH, EXCLAMATIONS, QUESTIONS,LINKS  ,TOPICREPETITION  ,REPLIES   ,\
-    #         SPREADVELOCITY   ,USER_DIVERSITY  ,RETWEETED_USER_DIVERSITY  ,HASHTAG_DIVERSITY ,\
-    #         LANGUAGE_DIVERSITY, VOCABULARY_DIVERSITY, CLASS)\
-    #        VALUES ('%s', %f, %f, %f,\
-    #         %f, %f, %f,%f, %f, %f," \
-    #       "%f, %f, %f, %f, \
-    #        %f, %f, %d)" % \
-    #       (trend,depth_retweets,ratio_retweets,hashtags,
-    #         length,exclamations,questions,
-    #         links,topicRepetition,replies,
-    #         spreadVelocity,user_diversity1,
-    #         retweeted_user_diversity1,hashtag_diversity1,
-    #         language_diversity1,vocabulary_diversity1,0)
-    # cursor.execute(sql)
-    # db.commit()
+
     ##print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
     vector = []
 
@@ -545,6 +563,51 @@ def importModel(filename):
         return classifier
 
 #check that input belong to any trend:
+
+def addNewTrend(TableName, trend,depth_retweets,ratio_retweets,hashtags,
+            length,exclamations,questions,
+            links,topicRepetition,replies,
+            spreadVelocity,user_diversity,
+            retweeted_user_diversity,hashtag_diversity,
+            language_diversity,vocabulary_diversity,Class):
+    sql = "INSERT INTO %s(\
+               TREND, DEPTH_RETWEETS,RATIO_RETWEETS,HASHTAGS, \
+                LENGTH, EXCLAMATIONS, QUESTIONS,LINKS  ,TOPICREPETITION  ,REPLIES   ,\
+                SPREADVELOCITY   ,USER_DIVERSITY  ,RETWEETED_USER_DIVERSITY  ,HASHTAG_DIVERSITY ,\
+                LANGUAGE_DIVERSITY, VOCABULARY_DIVERSITY, CLASS)\
+               VALUES (%s, %f, %f, %f,\
+                %f, %f, %f,%f, %f, %f," \
+          "%f, %f, %f, %f, \
+           %f, %f, %d)" % \
+          (TableName,trend, depth_retweets, ratio_retweets, hashtags,
+           length, exclamations, questions,
+           links, topicRepetition, replies,
+           spreadVelocity, user_diversity,
+           retweeted_user_diversity, hashtag_diversity,
+           language_diversity, vocabulary_diversity, Class)
+    cursor.execute(sql)
+    db.commit()
+
+def updateTrend(TableName,ID,depth_retweets,ratio_retweets,hashtags,
+            length,exclamations,questions,
+            links,topicRepetition,replies,
+            spreadVelocity,user_diversity,
+            retweeted_user_diversity,hashtag_diversity,
+            language_diversity,vocabulary_diversity):
+    sql = "Update %s" \
+          "set DEPTH_RETWEETS = %f,RATIO_RETWEETS= %f,HASHTAGS= %f, \
+            LENGTH= %f, EXCLAMATIONS= %f, QUE,STIONS,LINKS = %f ,TOPICREPETITION = %f ,REPLIES = %f  ,\
+            SPREADVELOCITY  = %f ,USER_DIVERSITY = %f ,RETWEETED_USER_DIVERSITY = %f ,HASHTAG_DIVERSITY = %f,\
+            LANGUAGE_DIVERSITY= %f, VOCABULARY_DIVERSITY= %f, CLASS = %d" \
+          "WHERE ID = %d" \
+          %(TableName,depth_retweets,ratio_retweets,hashtags,
+            length,exclamations,questions,
+            links,topicRepetition,replies,
+            spreadVelocity,user_diversity,
+            retweeted_user_diversity,hashtag_diversity,
+            language_diversity,vocabulary_diversity,ID)
+    cursor.execute(sql)
+    db.commit()
 
 def checkTrend(filename, input):
     f = open(filename,"r")
