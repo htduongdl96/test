@@ -14,6 +14,7 @@ import time
 import time
 import argparse
 import string
+import threading
 import json
 #TWITTER API CONFIGURATIONS
 consumer_key = twitter_config.consumer_key
@@ -28,11 +29,18 @@ auth.set_access_token(access_token, access_secret)
 api = tweepy.API(auth)
 
 isRunning = False
+import time
+def StartStream():
 
-def StartStream(trends):
 	while True:
 		try:
+			with open("trends.txt", 'r') as f:
+				trends = [line.replace("\n","") for line in f]
+			if twitter_stream.running is True:
+				twitter_stream.disconnect()
+			print(trends)
 			twitter_stream.filter(track=trends,stall_warnings=True, async=True)
+			time.sleep(600)
 		except ProtocolError:
 			continue
 		except IncompleteRead:
@@ -69,22 +77,34 @@ class KafkaPushListener(StreamListener):
 #Twitter Stream Config
 twitter_stream = Stream(auth, KafkaPushListener())
 
+from apscheduler.schedulers.background import BackgroundScheduler
+sched = BackgroundScheduler()
+sched.start()
+
+def some_job():
+	api = tweepy.API(auth)
+	trends1 = api.trends_place(1)
+	trends = set([trend['name'] for trend in trends1[0]['trends']])
+	print(trends)
+	if(len(trends) > 10):
+		file = open("trends.txt", "w")
+		file.flush()
+		for i in trends:
+			string = i.replace('"', '') + "\n"
+			# string = string.encode('utf-8')
+			# print(string)
+			file = open("trends.txt", "a+")
+			file.write(string)
+			file.close()
+
 #Produce Data that has Game of Thrones hashtag (Tweets)
-api = tweepy.API(auth)
-trends1 = api.trends_place(1)
-trends = set([trend['name'] for trend in trends1[0]['trends']])
-print(trends)
-file = open("trends.txt","w")
-file.flush()
-file.close()
-file = open("trends.txt","a+")
-for i in trends:
-	string = json.dumps(i).replace('"','')
-	print(string)
-	file.write(string)
-	file.write("\n")
-file.close()
-StartStream(trends)
+
+sched.add_job(some_job, 'interval', minutes = 10)
+
+
+
+
+StartStream()
 
 # for e in trends:
 # 	print('trends: --------------    ' + e)
