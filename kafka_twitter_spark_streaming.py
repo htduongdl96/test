@@ -76,7 +76,7 @@ def getIntent(x):
             return 'No Verb Found'
 outFile = open('temp1.txt',"w")
 
-timePerVector = 5
+timePerVector = 60
 
 
 # writer.writerow(['depth_retweets','ratio_retweets','hashtags',
@@ -361,7 +361,7 @@ def getTimeFromDB(ID, timeTweet):
         return False
 
 def getFeature(x):
-
+    print("WTFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"+x[1])
     global numberItem
     global timeEnd
     global timeStart
@@ -450,28 +450,28 @@ def getFeature(x):
 
 
     #print ('------------' + json.dumps(x, indent = 4) + '----------------')
-    res = json.loads(json.dumps(x, indent = 4))
+    res = json.loads(x)
     # #print('asddddddddddddddddddadsada',res['text'])
     print(res)
     # print(res['id'])
-    try:
-        test = {    'userId':res['user']['id'],
-                    'tweet': translator.translate(res['text']).text,
-                    'retweet_count': res['retweet_count'],
-                    'arr_hashtags': res['entities']['hashtags'],
-                    'links': len(res['entities']['urls']),
-                    'isReplies': isReplies(res['in_reply_to_status_id']),
-                    'created': res['created_at'],
-                    'lang': res['lang']}
-    except:
-        return
-        pass
-    trend = checkTrend("trends.txt", test['tweet'])
+    # try:
+    #     test = {    'userId':res['user']['id'],
+    #                 'tweet': translator.translate(res['text']).text,
+    #                 'retweet_count': res['retweet_count'],
+    #                 'arr_hashtags': res['entities']['hashtags'],
+    #                 'links': len(res['entities']['urls']),
+    #                 'isReplies': isReplies(res['in_reply_to_status_id']),
+    #                 'created': res['created_at'],
+    #                 'lang': res['lang']}
+    # except:
+    #     return
+    #     pass
+    trend = checkTrend("trends.txt", res['tweet'])
 
     if trend == "a":
         return
 
-    timeStartTweet = test['created']
+    timeStartTweet = res['created']
     stringTime = timeStartTweet[4:7] + ' ' + timeStartTweet[8:10] + ' ' + timeStartTweet[-4:] + ' ' + timeStartTweet[11:13] + ':' + timeStartTweet[14:16] + ':' + timeStartTweet[
                                                                                                                 17:19]
     ##print(stringTime)
@@ -484,7 +484,7 @@ def getFeature(x):
     ###print('------------' + json.dumps(test, indent = 4) + '------------')
     #Return feature
      # 2
-    tweetJson = test
+    tweetJson = res
     ###print(json.dumps(test, indent = 4))
     ###print (tweetJson)
 
@@ -517,6 +517,9 @@ def getFeature(x):
     for hashtag in tweetJson['arr_hashtags']:
         increaseBag(hashtag['text'], hashtag_diversity)
     increaseBag(tweetJson['lang'], language_diversity)
+    print("12313132")
+    tweetJson['tweet'] = translator.translate(tweetJson['tweet']).text
+    print("1312444123")
     newBag = [w.lower() for w in tweetJson['tweet'].split()]
     if len(newBag)>0:
         for word in newBag:
@@ -700,17 +703,25 @@ def predictTrend(vector,trend, timeStart):
     test = [vector[0], vector[1], vector[2], vector[3],vector[4], vector[5], vector[6], vector[7], vector[8]
         , vector[9], vector[10], vector[11], vector[12], vector[13], vector[14]]
     class_probabilities = classifier.predict_proba([test])
-
+    global numberItem
     CLASS = classifier.predict([test])[0]
     print("CHO PHUOC XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",(class_probabilities.max(1)))
     if(class_probabilities.max(1)[0] > 0.8):
-        addNewTrend("ALL_TWEET_VECTOR", trend, vector[0], vector[1], vector[2], vector[3],vector[4], vector[5], vector[6], vector[7], vector[8]
+        if(numberItem > 50):
+            addNewTrend("ALL_TWEET_VECTOR", trend, vector[0], vector[1], vector[2], vector[3],vector[4], vector[5], vector[6], vector[7], vector[8]
         , vector[9], vector[10], vector[11], vector[12], vector[13], vector[14], CLASS, timeStart)
     else:
         sql = ""
     # print(classifier.predict([test]))
 
     return CLASS
+
+
+def forEachBatch(x):
+    tweet = x[1].split("\n")
+    for i in tweet:
+        print("OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
+        getFeature(i)
 
 
 
@@ -726,15 +737,15 @@ if __name__ == "__main__":
         #localhost:2181 = Default Zookeeper Consumer Address
         kafkaStream = KafkaUtils.createStream(ssc, 'localhost:2181', 'spark-streaming', {'twitter':1})
         #Parse Twitter Data as json
-        parsed = kafkaStream.map(lambda v: json.loads(v[1]))
+        parsed = kafkaStream.map(lambda v: forEachBatch(v))
         #parsed = kafkaStream.map(lambda x: x[1])
         #kafkaStream.saveAsTextFiles('test.txt')
         #Count the number of tweets per Usere
         #lines = parsed.map(lambda x: x[1])
-        tweets = parsed.map(getFeature)
+        # tweets = parsed.map(getFeature)
         # ##print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
         #print('asdljaslkdjaslkjdasjdlkajdlasjkd',len(tweets))
-        tweets.pprint()
+        parsed.pprint()
         #tweets.saveDataToFile("1")
         # vector = np.array(tweets)
         #rdd = tweets.foreachRDD(getRDD)
