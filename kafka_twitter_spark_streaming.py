@@ -307,10 +307,10 @@ def saveDataToFile(trends):
 
 
 
-def getIDFromDB(trend, time):
+def getIDFromDB(trend, time, tableName):
     global cursor
     trend = trend.replace("\n","")
-    sql = "SELECT MAX(ID) FROM ALL_TWEET_VECTOR WHERE TREND = '%s'" % (trend)
+    sql = "SELECT MAX(ID) FROM %s WHERE TREND = '%s'" % (tableName,trend)
     print(sql)
     sql = sql.encode("utf-8")
     cursor.execute(sql)
@@ -320,9 +320,9 @@ def getIDFromDB(trend, time):
         print("HKJOPJBNMKJHBNMLKJKNMKLJBNKJKIJHUGFVBJHGVBNJGV" + row[0])
     except:
         pass
-    if (getTimeFromDB(row[0], time) == True):
+    if (getTimeFromDB(row[0], time, tableName) == True):
         return row
-    sql = "SELECT MAX(ID) FROM ALL_TWEET_VECTOR"
+    sql = "SELECT MAX(ID) FROM %s"  % (tableName)
     cursor.execute(sql)
     row = cursor.fetchone()
     print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXxxXXXXXX",row[0])
@@ -332,11 +332,11 @@ def getIDFromDB(trend, time):
 
 from datetime import datetime, date
 
-def getTimeFromDB(ID, timeTweet):
+def getTimeFromDB(ID, timeTweet, tableName):
     global cursor
     global timePerVector
     try:
-        sql = "SELECT TIME FROM ALL_TWEET_VECTOR WHERE ID = %s" % (ID)
+        sql = "SELECT TIME FROM %s WHERE ID = %s" % (tableName,ID)
         print(sql)
         cursor.execute(sql)
         time = cursor.fetchone()
@@ -361,7 +361,7 @@ def getTimeFromDB(ID, timeTweet):
         return False
 
 def getFeature(x):
-    print("WTFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"+x[1])
+    # print("WTFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"+x[1])
     global numberItem
     global timeEnd
     global timeStart
@@ -476,8 +476,8 @@ def getFeature(x):
                                                                                                                 17:19]
     ##print(stringTime)
     datetime_object = datetime.strptime(stringTime, '%b %d %Y %H:%M:%S')
-    ID = getIDFromDB(trend,datetime_object)
-    #print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx" + trend)
+    ID = getIDFromDB(trend,datetime_object,"ALL_TWEET_VECTOR")
+    # print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx" + ID)
     loadDataFromFile(ID)
     numberItem = numberItem + 1
 
@@ -518,7 +518,10 @@ def getFeature(x):
         increaseBag(hashtag['text'], hashtag_diversity)
     increaseBag(tweetJson['lang'], language_diversity)
     print("12313132")
-    tweetJson['tweet'] = translator.translate(tweetJson['tweet']).text
+    try:
+        tweetJson['tweet'] = translator.translate(tweetJson['tweet']).text
+    except:
+        pass
     print("1312444123")
     newBag = [w.lower() for w in tweetJson['tweet'].split()]
     if len(newBag)>0:
@@ -587,7 +590,10 @@ def getFeature(x):
     vector.append(vocabulary_diversity1)
 
     print(trend)
-    Class = predictTrend(vector,trend,timeStart)
+    if numberItem > 50:
+        Class = predictTrend(vector,trend,timeStart)
+    else:
+        Class = -1
     addNewTrend("ALL_TWEET_VECTOR",trend,depth_retweets,ratio_retweets,hashtags,
             length,exclamations,questions,
             links,topicRepetition,replies,
@@ -621,7 +627,7 @@ def addNewTrend(TableName, trend,depth_retweets,ratio_retweets,hashtags,
             language_diversity,vocabulary_diversity,Class, time):
 
 
-    if(getTimeFromDB(getIDFromDB(trend,time),time) == False):
+    if(getTimeFromDB(getIDFromDB(trend,time,TableName),time,TableName) == False):
         sql = "INSERT INTO %s(\
 TREND, DEPTH_RETWEETS, RATIO_RETWEETS, HASHTAGS,\
 LENGTH, EXCLAMATIONS, QUESTIONS,LINKS  ,TOPICREPETITION , REPLIES,\
@@ -642,7 +648,7 @@ LANGUAGE_DIVERSITY, VOCABULARY_DIVERSITY, CLASS, TIME)"\
         cursor.execute(sql)
         db.commit()
     else:
-        updateTrend(TableName,getIDFromDB(trend,time), depth_retweets,ratio_retweets,hashtags,
+        updateTrend(TableName,getIDFromDB(trend,time,TableName), depth_retweets,ratio_retweets,hashtags,
             length,exclamations,questions,
             links,topicRepetition,replies,
             spreadVelocity,user_diversity,
@@ -694,6 +700,7 @@ def checkTrend(filename, input):
 
 from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler
+from sklearn.feature_extraction.text import CountVectorizer
 def predictTrend(vector,trend, timeStart):
     classifier = importModel("model.pkl")
     # sc = StandardScaler()
@@ -703,15 +710,22 @@ def predictTrend(vector,trend, timeStart):
     test = [vector[0], vector[1], vector[2], vector[3],vector[4], vector[5], vector[6], vector[7], vector[8]
         , vector[9], vector[10], vector[11], vector[12], vector[13], vector[14]]
     class_probabilities = classifier.predict_proba([test])
-    global numberItem
+
     CLASS = classifier.predict([test])[0]
+
+
     print("CHO PHUOC XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",(class_probabilities.max(1)))
+
+    bagOfWordClassifier = importModel("SVM_BagofWords.pkl")
+    
+    count_vect = CountVectorizer()
     if(class_probabilities.max(1)[0] > 0.8):
         if(numberItem > 50):
             addNewTrend("ALL_TWEET_VECTOR", trend, vector[0], vector[1], vector[2], vector[3],vector[4], vector[5], vector[6], vector[7], vector[8]
         , vector[9], vector[10], vector[11], vector[12], vector[13], vector[14], CLASS, timeStart)
     else:
         sql = ""
+
     # print(classifier.predict([test]))
 
     return CLASS
@@ -720,8 +734,11 @@ def predictTrend(vector,trend, timeStart):
 def forEachBatch(x):
     tweet = x[1].split("\n")
     for i in tweet:
-        print("OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
-        getFeature(i)
+        try:
+            getFeature(i)
+            i = 0
+        except:
+            pass
 
 
 

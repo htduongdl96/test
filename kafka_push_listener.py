@@ -73,7 +73,9 @@ class KafkaPushListener(StreamListener):
 		# print(res)
 		try:
 			# print("1")
+
 			test = {'userId': res['user']['id'],
+					'id' : res['id'],
 					'tweet': res['text'],
 					'retweet_count': res['retweet_count'],
 					'arr_hashtags': res['entities']['hashtags'],
@@ -115,24 +117,24 @@ from apscheduler.schedulers.background import BackgroundScheduler
 sched = BackgroundScheduler()
 sched.start()
 
-# def some_job():
-# 	api = tweepy.API(auth)
-# 	trends1 = api.trends_place(1)
-# 	trends = set([trend['name'] for trend in trends1[0]['trends']])
-# 	print(trends)
-# 	if(len(trends) > 10):
-# 		file = open("trends.txt", "w")
-# 		file.flush()
-# 		for i in trends:
-# 			string = i.replace('"', '') + "\n"
-# 			# string = string.encode('utf-8')
-# 			# print(string)
-# 			file = open("trends.txt", "a+")
-# 			file.write(string)
-# 			file.close()
-#
-#
-# sched.add_job(some_job, 'interval', minutes = 10)
+def some_job():
+	api = tweepy.API(auth)
+	trends1 = api.trends_place(1)
+	trends = set([trend['name'] for trend in trends1[0]['trends']])
+	print(trends)
+	if(len(trends) > 10):
+		file = open("trends.txt", "w")
+		file.flush()
+		for i in trends:
+			string = i.replace('"', '') + "\n"
+			# string = string.encode('utf-8')
+			# print(string)
+			file = open("trends.txt", "a+")
+			file.write(string)
+			file.close()
+
+
+sched.add_job(some_job, 'interval', minutes = 10)
 
 
 
